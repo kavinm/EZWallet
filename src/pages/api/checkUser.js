@@ -6,6 +6,8 @@ import {
 import { DfnsApiClient } from "@dfns/sdk";
 import { AsymmetricKeySigner } from "@dfns/sdk-keysigner";
 import { useRouter } from "next/router";
+import { ImageData, getNounSeedFromBlockHash, getNounData } from '@nouns/assets';
+import { buildSVG } from '@nouns/sdk';
 
 const signer = new AsymmetricKeySigner({
   privateKey: process.env.DFNS_SERVICE_ACCOUNT_PRIVATE_KEY,
@@ -44,25 +46,21 @@ async function connectToDatabase() {
 
 connectToDatabase();
 
-async function getWalletIds(client, username, password) {
+async function getUser(client, username, password) {
   const collection = client.db("EmailWallet").collection("litemails");
   const user = await collection.findOne({ username, password });
-  return user
-    ? {
-        walletIdEthereum: user.walletIdEthereum,
-        walletIdPolygon: user.walletIdPolygon,
-      }
-    : null;
+  return user;
 }
 
-async function addUsernamePasswordAndWalletIds(
+async function addUsernamePasswordWalletIdsAndNoun(
   client,
   username,
   password,
-  walletIds
+  walletIds,
+  svgBinary
 ) {
   const collection = client.db("EmailWallet").collection("litemails");
-  await collection.insertOne({ username, password, ...walletIds });
+  await collection.insertOne({ username, password, ...walletIds, svgBinary });
 }
 
 const handler = async (req, res) => {
@@ -70,16 +68,17 @@ const handler = async (req, res) => {
     const { username, password } = req.body;
     const client = await connectToDatabase();
 
-    let walletIds = await getWalletIds(client, username, password);
-    if (walletIds) {
+    let user = await getUser(client, username, password);
+    if (user) {
       res.status(200).json({
         message: "Username and password exist",
-        walletIdEthereum: walletIds.walletIdEthereum,
-        walletIdPolygon: walletIds.walletIdPolygon,
+        walletIdEthereum: user.walletIdEthereum,
+        walletIdPolygon: user.walletIdPolygon,
+        svgBinary: user.svgBinary,
       });
     } else {
       // Check if the username exists but the password doesn't match
-      const user = await client
+      user = await client
         .db("EmailWallet")
         .collection("litemails")
         .findOne({ username });
@@ -94,21 +93,33 @@ const handler = async (req, res) => {
           body: { network: "PolygonMumbai" },
         });
 
-        walletIds = {
+        const walletIds = {
           walletIdEthereum: walletIdEthereum.id,
           walletIdPolygon: walletIdPolygon.id,
         };
 
-        await addUsernamePasswordAndWalletIds(
+        // Generate a random Noun ID between 1 and 10000
+        const nounId = Math.floor(Math.random() * 10000) + 1;
+
+        // Generate a random block hash
+        const blockHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+
+        const seed = getNounSeedFromBlockHash(nounId, blockHash);
+        const { parts, background } = getNounData(seed);
+        const svgBinary = buildSVG(parts, ImageData.palette, background);
+
+        await addUsernamePasswordWalletIdsAndNoun(
           client,
           username,
           password,
-          walletIds
+          walletIds,
+          svgBinary
         );
         res.status(200).json({
           message: "Username and password added",
           walletIdEthereum: walletIds.walletIdEthereum,
           walletIdPolygon: walletIds.walletIdPolygon,
+          svgBinary,
         });
       }
     }
