@@ -113,7 +113,8 @@ const WalletPage = () => {
   const [address, setAddress] = useState("");
   const [amount, setAmount] = useState("");
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenZeta, onOpen: onOpenZeta, onClose: onCloseZeta } = useDisclosure();
+  const { isOpen: isOpenNative, onOpen: onOpenNative, onClose: onCloseNative } = useDisclosure();
 
   useEffect(() => {
     const fetchWallets = async () => {
@@ -174,11 +175,13 @@ const WalletPage = () => {
             </VStack>
           )}
 
-          <Button onClick={onOpen}>Send Zeta</Button>
+          <Button onClick={onOpenZeta}>Send Zeta</Button>
+          <Button onClick={onOpenNative}>Send Native</Button>
         </div>
       </div>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
+      {/* Zeta Modal */}
+      <Modal isOpen={isOpenZeta} onClose={onCloseZeta}>
         <ModalOverlay />
         <ModalContent style={containerStyle}>
           <ModalHeader style={headerStyle}>Send Zeta</ModalHeader>
@@ -242,8 +245,9 @@ const WalletPage = () => {
                 }
                 const data2 = await response2.json();
                 console.log(data2);
-                onClose();
-              }}>
+                onCloseZeta();
+              }}
+            >
               Send Zeta to Mumbai
             </Button>
             <Button
@@ -287,9 +291,91 @@ const WalletPage = () => {
                 }
                 const data2 = await response2.json();
                 console.log(data2);
-                onClose();
-              }}>
+                onCloseZeta();
+              }}
+            >
               Send Zeta to Goerli
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Native Modal */}
+      <Modal isOpen={isOpenNative} onClose={onCloseNative}>
+        <ModalOverlay />
+        <ModalContent style={containerStyle}>
+          <ModalHeader style={headerStyle}>Send Native</ModalHeader>
+
+          <ModalCloseButton />
+
+          <ModalBody style={{ background: "white", color: "black" }}>
+            <Input
+              placeholder="Enter address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              _placeholder={{ color: "gray.500" }}
+            />
+            <Input
+              placeholder="Enter amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              _placeholder={{ color: "gray.500" }}
+            />
+          </ModalBody>
+
+          <ModalFooter style={{ background: "white", color: "black" }}>
+            <Button
+              color="black"
+              onClick={async () => {
+                const polygonId = walletPolygon.id;
+                const response = await fetch("/api/sendNative", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    address,
+                    amount,
+                    walletId: polygonId,
+                  }),
+                });
+                if (!response.ok) {
+                  console.error(await response.json());
+                  return;
+                }
+                const data = await response.json();
+                console.log(data);
+                
+              }}
+            >
+              Send Matic
+            </Button>
+            <Button
+              color="black"
+              onClick={async () => {
+                const ethereumId = walletEthereum.id
+                const response = await fetch("/api/sendNative", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    address,
+                    amount,
+                    walletId: ethereumId ,
+                  }),
+                });
+                if (!response.ok) {
+                  console.error(await response.json());
+                  return;
+                }
+                const data = await response.json();
+                console.log(data);
+                
+
+              }}
+            >
+              Send ETH
             </Button>
           </ModalFooter>
         </ModalContent>
