@@ -17,5 +17,6 @@ const dfnsApi = new DfnsApiClient({
 export default async function handler(req, res) {
   const { walletId } = req.query;
   const wallet = await dfnsApi.wallets.getWallet({ walletId });
-  res.send(wallet);
+  const walletAssets = await dfnsApi.wallets.getWalletAssets({ walletId });
+  res.send({ ...wallet, assets: walletAssets });
 }
