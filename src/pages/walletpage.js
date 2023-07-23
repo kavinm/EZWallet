@@ -188,13 +188,13 @@ const WalletPage = () => {
               color="black"
               onClick={async () => {
                 const ethereumId = walletEthereum.id;
-                const response = await fetch("/api/sendZetaToMumbai", {
+                const response = await fetch("/api/sendZetaOnGoerli", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    address,
+                    address: "0x7fd072FaEeB75ef5e1B0A4443b80539eF48Ab9f5",
                     amount,
                     walletId: ethereumId,
                   }),
@@ -205,9 +205,74 @@ const WalletPage = () => {
                 }
                 const data = await response.json();
                 console.log(data);
+                const response2 = await fetch(
+                  "/api/crossChainZetaGoerliToMumbai",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      address: "0x7fd072FaEeB75ef5e1B0A4443b80539eF48Ab9f5",
+                      amount,
+                      walletId: ethereumId,
+                    }),
+                  }
+                );
+                if (!response2.ok) {
+                  console.error(await response.json());
+                  return;
+                }
+                const data2 = await response2.json();
+                console.log(data2);
                 onClose();
               }}>
-              Send
+              Send Zeta to Mumbai
+            </Button>
+            <Button
+              color="black"
+              onClick={async () => {
+                const polygonId = walletPolygon.id;
+                const response = await fetch("/api/sendZetaOnMumbai", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    address: "0x7fd072FaEeB75ef5e1B0A4443b80539eF48Ab9f5",
+                    amount,
+                    walletId: polygonId,
+                  }),
+                });
+                if (!response.ok) {
+                  console.error(await response.json());
+                  return;
+                }
+                const data = await response.json();
+                console.log(data);
+                //cross chain
+                const response2 = await fetch(
+                  "/api/crossChainZetaMumbaiToGoerli",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      address: "0x7fd072FaEeB75ef5e1B0A4443b80539eF48Ab9f5",
+                      amount,
+                    }),
+                  }
+                );
+                if (!response2.ok) {
+                  console.error(await response2.json());
+                  return;
+                }
+                const data2 = await response2.json();
+                console.log(data2);
+                onClose();
+              }}>
+              Send Zeta to Goerli
             </Button>
           </ModalFooter>
         </ModalContent>
