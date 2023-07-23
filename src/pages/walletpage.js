@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { formatUnits } from "ethers/lib/utils";
 import {
   Box,
   Button,
@@ -12,7 +13,95 @@ import {
   ModalBody,
   ModalFooter,
   Input,
+  VStack,
+  HStack,
+  Divider,
 } from "@chakra-ui/react";
+import { ethers } from "ethers";
+
+const pageStyle = {
+  background: "#4ED8B4",
+  fontFamily: "Times New Roman",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "100vh",
+};
+
+const containerStyle = {
+  background: "#BFBFBF",
+  boxShadow: "3px 3px 5px 1px rgba(0,0,0,0.75)",
+  border: "1.4px solid white",
+  padding: "4px",
+  maxWidth: "800px",
+  width: "100%",
+  minHeight: "20px",
+};
+
+const headerStyle = {
+  width: "100%",
+  background: "#01007A",
+  height: "23px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  color: "white",
+  padding: "0 10px",
+  boxSizing: "border-box",
+};
+
+const navStyle = {
+  width: "100%",
+  display: "flex",
+  justifyContent: "space-around",
+  padding: "10px 0",
+  boxSizing: "border-box",
+};
+
+const contentStyle = {
+  height: "400px",
+  width: "100%",
+  background: "white",
+  border: "1.2px solid black",
+  overflow: "auto",
+  padding: "5px",
+  boxSizing: "border-box",
+};
+
+const Noun = ({ svgBinary }) => (
+  <div>
+    <h2>Your Noun</h2>
+    <div dangerouslySetInnerHTML={{ __html: svgBinary }} />
+  </div>
+);
+
+const PolygonAssets = ({ assets, address }) => (
+  <div>
+    <h2>Polygon Assets</h2>
+    {assets.map((asset) => (
+      <div key={asset.symbol}>
+        <p>Symbol: {asset.symbol}</p>
+        <p>Balance: {formatUnits(asset.balance, asset.decimals)}</p>
+        
+      </div>
+    ))}
+    <p>To Deposit Polygon Assets: {address}</p>
+  </div>
+);
+
+const EthereumAssets = ({ assets, address }) => (
+  <div>
+    <h2>Ethereum Assets</h2>
+    {assets.map((asset) => (
+      <div key={asset.symbol}>
+        <p>Symbol: {asset.symbol}</p>
+        <p>Balance: {formatUnits(asset.balance, asset.decimals)}</p>
+        
+      </div>
+    ))}
+    <p>To Deposit Ethereum Assets: {address}</p>
+  </div>
+);
 
 const WalletPage = () => {
   const router = useRouter();
@@ -25,55 +114,6 @@ const WalletPage = () => {
   const [amount, setAmount] = useState("");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-
-  const pageStyle = {
-    background: "#4ED8B4",
-    fontFamily: "Times New Roman",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-  };
-
-  const containerStyle = {
-    background: "#BFBFBF",
-    boxShadow: "3px 3px 5px 1px rgba(0,0,0,0.75)",
-    border: "1.4px solid white",
-    padding: "4px",
-    maxWidth: "800px",
-    width: "100%",
-    minHeight: "20px",
-  };
-
-  const headerStyle = {
-    width: "100%",
-    background: "#01007A",
-    height: "23px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    color: "white",
-    padding: "0 10px",
-    boxSizing: "border-box",
-  };
-
-  const navStyle = {
-    width: "100%",
-    display: "flex",
-    justifyContent: "space-around",
-    padding: "10px 0",
-    boxSizing: "border-box",
-  };
-
-  const contentStyle = {
-    height: "400px",
-    width: "100%",
-    background: "white",
-    border: "1.2px solid black",
-    overflow: "auto",
-    padding: "5px",
-    boxSizing: "border-box",
-  };
 
   useEffect(() => {
     const fetchWallets = async () => {
@@ -125,36 +165,13 @@ const WalletPage = () => {
 
         <div style={contentStyle}>
           {svgBinary && (
-            <div>
-              <h2>Polygon Wallet</h2>
-              <p>ID: {walletPolygon.id}</p>
-              <p>Address: {walletPolygon.address}</p>
-              <p>Chain: {walletPolygon.network}</p>
-
-              <h3>Assets:</h3>
-              {walletPolygon.assets.assets.map((asset) => (
-                <div key={asset.symbol}>
-                  <p>Symbol: {asset.symbol}</p>
-                  <p>Balance: {asset.balance}</p>
-                </div>
-              ))}
-
-              <h2>Ethereum Wallet</h2>
-              <p>ID: {walletEthereum.id}</p>
-              <p>Address: {walletEthereum.address}</p>
-              <p>Chain: {walletEthereum.network}</p>
-
-              <h3>Assets:</h3>
-              {walletEthereum.assets.assets.map((asset) => (
-                <div key={asset.symbol}>
-                  <p>Symbol: {String(asset.symbol)}</p>
-                  <p>Balance: {String(asset.balance)}</p>
-                </div>
-              ))}
-
-              <h2>Your Noun</h2>
-              <div dangerouslySetInnerHTML={{ __html: svgBinary }} />
-            </div>
+            <VStack spacing={4} align="center">
+              <Noun svgBinary={svgBinary} />
+              <Divider />
+              <PolygonAssets assets={walletPolygon.assets.assets} address={walletPolygon.address} />
+              <Divider />
+              <EthereumAssets assets={walletEthereum.assets.assets} address={walletEthereum.address} />
+            </VStack>
           )}
 
           <Button onClick={onOpen}>Send Zeta</Button>
